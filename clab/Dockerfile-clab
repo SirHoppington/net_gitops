@@ -1,0 +1,19 @@
+# Extend the clab image
+FROM ghcr.io/srl-labs/clab:0.66.0
+
+
+# Install Python and pip
+RUN apk add --update --no-cache python3 py3-pip gcc libc-dev python3-dev libffi-dev coreutils-sha512sum shellcheck
+
+
+# Copy the requirements file into the container at /usr/src/app
+#COPY requirements.txt ./
+COPY clab/requirements.txt clab/requirements.txt
+# Install any needed packages specified in requirements.txt
+RUN pip3 install --no-cache-dir -r clab/requirements.txt --break-system-packages
+
+COPY clab/scripts/docker-entrypoint.sh /bin/docker-entrypoint.sh
+#COPY /etc/hosts /etc/hosts
+RUN chmod +x /bin/docker-entrypoint.sh 
+#RUN chmod 666 /etc/hosts
+ENTRYPOINT ["/bin/docker-entrypoint.sh"]

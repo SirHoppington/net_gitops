@@ -1,0 +1,29 @@
+devices:
+    r1-lab:
+        type: 'router'
+        os: 'eos'
+        credentials:
+            default:
+                username: admin
+                password: admin
+        connections:
+            cli:
+                protocol: ssh
+                ip: "10.0.0.100"
+            eapi:
+                protocol: https
+                ip: "10.0.0.100"
+
+    # csr1000v-1:
+    #     type: 'router'
+    #     os: 'iosxe'
+    #     platform: asr1k
+    #     alias: 'helper'
+    #     credentials:
+    #         default:
+    #             username: cisco
+    #             password: cisco
+    #     connections:
+    #         cli:
+    #             protocol: ssh
+    #             ip: "172.25.192.90"
