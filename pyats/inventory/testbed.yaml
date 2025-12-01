@@ -1,5 +1,5 @@
 devices:
-    # router1
+    # router
     r1-lab:
         type: 'router'
         os: 'eos'
