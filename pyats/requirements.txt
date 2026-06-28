@@ -1,1 +1,2 @@
-py-eapi
+pyeapi==1.0.4
+pyats==26.6

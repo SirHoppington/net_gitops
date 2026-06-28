@@ -1,0 +1,24 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - topology.yaml
+  - interfaces.yaml
+  - exec-map.yaml
+  - pyats-job.yaml
+
+# Build the startup-config ConfigMaps from plain .cfg files under configs/.
+# Key is startup-config.cfg (the path clabernetes mounts); add a router by
+# dropping configs/<hostname>.cfg in and listing it here.
+configMapGenerator:
+  - name: r1-startup-config
+    files:
+      - startup-config.cfg=configs/r1-clab1.cfg
+  - name: r2-startup-config
+    files:
+      - startup-config.cfg=configs/r2-clab1.cfg
+
+# Keep stable names so the Topology's configMapName references resolve.
+generatorOptions:
+  disableNameSuffixHash: true

@@ -1,0 +1,72 @@
+---
+apiVersion: clabernetes.containerlab.dev/v1alpha1
+kind: Topology
+metadata:
+  name: ci
+spec:
+  naming: prefixed
+  definition:
+    containerlab: |-
+          ---
+          name: ci
+          topology:
+            kinds:
+              arista_ceos:
+                binds:
+                  - interfaces.json:/mnt/flash/EosIntfMapping.json:ro
+                env:
+                  CLAB_MGMT_VRF: MGMT
+                  INTFTYPE: Ethernet
+                exec:
+                  - /mnt/flash/init.sh
+            links:
+              - endpoints:
+                  - r1-clab1:eth1
+                  - r2-clab1:eth1
+            nodes:
+              r1-clab1:
+                image: 192.168.155.250:5000/ceos:latest
+                kind: arista_ceos
+                labels:
+                  type: lab
+              r2-clab1:
+                image: 192.168.155.250:5000/ceos:latest
+                kind: arista_ceos
+                labels:
+                  type: lab
+  imagePull:
+    pullThroughOverride: never
+    insecureRegistries:
+      - 192.168.155.250:5000
+  deployment:
+    launcherImage: ghcr.io/srl-labs/clabernetes/clabernetes-launcher:latest
+    filesFromConfigMap:
+      r1-clab1:
+        - filePath: /clabernetes/interfaces.json
+          configMapName: interfaces
+          configMapPath: interfaces.json
+          mode: read
+        - filePath: /mnt/flash/init.sh
+          configMapName: exec-map
+          configMapPath: init.sh
+          mode: read
+        - filePath: /mnt/flash/startup-config
+          configMapName: r1-startup-config
+          configMapPath: startup-config.cfg
+          mode: read
+      r2-clab1:
+        - filePath: /clabernetes/interfaces.json
+          configMapName: interfaces
+          configMapPath: interfaces.json
+          mode: read
+        - filePath: /mnt/flash/init.sh
+          configMapName: exec-map
+          configMapPath: init.sh
+          mode: read
+        - filePath: /mnt/flash/startup-config
+          configMapName: r2-startup-config
+          configMapPath: startup-config.cfg
+          mode: read
+    privilegedLauncher: true
+    persistence:
+      enabled: false

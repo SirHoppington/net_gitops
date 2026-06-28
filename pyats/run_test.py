@@ -1,33 +1,65 @@
-from pyats.topology import loader
-import pyeapi
 import json
+import os
+import sys
+import time
 
-try:
-    testbed = loader.load('testbed.yaml')
-    device = testbed.devices['arista1']
+import pyeapi
+from pyats.topology import loader
 
-    # Connect via CLI (optional)
-    device.connect(alias='cli', via='cli')
-    print("Connected to Arista via CLI.")
+TESTBED = os.path.join(os.path.dirname(__file__), "inventory", "testbed.yaml")
 
-    # Connect via eAPI using pyeapi
-    node = pyeapi.connect(
-        transport='https',
-        host=device.connections['eapi']['ip'],
-        username=device.connections['eapi']['username'],
-        password=device.connections['eapi']['password'],
-        port=device.connections['eapi'].get('port', 443)
+# cEOS eAPI is not up immediately after the topology syncs - poll for it.
+BOOT_TIMEOUT = int(os.environ.get("PYATS_BOOT_TIMEOUT", "600"))
+BOOT_INTERVAL = int(os.environ.get("PYATS_BOOT_INTERVAL", "15"))
+
+
+def _plain(value):
+    """Return the plaintext of a pyATS Secret, or the value if already plain."""
+    return getattr(value, "plaintext", value)
+
+
+def _connect(device):
+    eapi = device.connections["eapi"]
+    creds = device.credentials["default"]
+    return pyeapi.connect(
+        transport="https",
+        host=eapi["ip"],
+        port=eapi.get("port", 443),
+        username=_plain(creds["username"]),
+        password=_plain(creds["password"]),
     )
 
-    # Run a command and get structured JSON
-    response = node.execute(['show version'])
-    print("Arista EOS Version Info:")
-    print(json.dumps(response, indent=2))
 
-    # Example: Get interface status
-    interfaces = node.execute(['show interfaces status'])
-    print("\nInterface Status:")
-    print(json.dumps(interfaces, indent=2))
+def check_device(device):
+    deadline = time.time() + BOOT_TIMEOUT
+    last_error = None
+    while time.time() < deadline:
+        try:
+            node = _connect(device)
+            version = node.execute(["show version"])
+            print(f"{device.name}: connected via eAPI")
+            print(json.dumps(version["result"], indent=2))
+            return
+        except Exception as exc:  # noqa: BLE001 - retry until boot completes
+            last_error = exc
+            print(f"{device.name}: not ready yet ({exc}); retrying...")
+            time.sleep(BOOT_INTERVAL)
+    raise TimeoutError(f"eAPI never came up within {BOOT_TIMEOUT}s: {last_error}")
 
-except Exception as e:
-    print(f"Error: {e}")
+
+def main():
+    testbed = loader.load(TESTBED)
+    failures = []
+    for name, device in testbed.devices.items():
+        try:
+            check_device(device)
+        except Exception as exc:  # noqa: BLE001 - report any device, keep going
+            failures.append(name)
+            print(f"{name}: FAILED - {exc}", file=sys.stderr)
+    if failures:
+        sys.exit(f"eAPI checks failed for: {', '.join(failures)}")
+    print("All devices passed eAPI checks.")
+
+
+if __name__ == "__main__":
+    main()
