@@ -1,0 +1,8 @@
+---
+# Per-PR namespace, managed by the lab app so prune on PR-close deletes it
+# (and everything inside). kustomize stamps the real name (lab-pr-<number>)
+# from the ApplicationSet's source.kustomize.namespace.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lab-pr-placeholder
