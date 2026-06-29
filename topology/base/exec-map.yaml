@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: exec-map
+data:
+  init.sh: |
+    #!/bin/bash
+    sleep 10
+    KEY=eapi-key.key
+    CRT=eapi-self-signed.crt
+    FastCli -p 15 -c "security pki key generate rsa 2048 $KEY"
+    CERT_CMD="security pki certificate generate self-signed $CRT key $KEY"
+    CERT_CMD="$CERT_CMD validity 9000 parameters common-name clab.local"
+    FastCli -p 15 -c "$CERT_CMD"
+    FastCli -p 15 -c 'conf t \n management api http-commands \n vrf OOB \n no shutdown'

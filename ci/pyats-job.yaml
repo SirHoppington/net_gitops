@@ -1,0 +1,19 @@
+---
+# On-demand pyATS Job applied by the pyats-lab workflow (NOT an ArgoCD hook).
+# Runs in-cluster so it reaches the routers via clabernetes svc DNS.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pyats-tests
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: pyats
+          image: 192.168.155.250:5000/pyats-clab:latest
+          imagePullPolicy: Always
+          env:
+            - name: PYATS_BOOT_TIMEOUT
+              value: "600"

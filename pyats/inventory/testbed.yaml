@@ -1,30 +1,43 @@
-devices:
-    # router
-    r1-lab:
-        type: 'router'
-        os: 'eos'
-        credentials:
-            default:
-                username: admin
-                password: admin
-        connections:
-            cli:
-                protocol: ssh
-                ip: "10.0.0.100"
-            eapi:
-                protocol: https
-                ip: "10.0.0.100"
+---
+# pyATS testbed targeting the per-PR clabernetes lab deployed by ArgoCD.
+#
+# The pyATS Job runs IN-CLUSTER (ArgoCD PostSync hook) in namespace
+# lab-pr-<PR-number>, alongside clabernetes Topology "ci" (nodes r1-clab1 /
+# r2-clab1, Arista cEOS). It reaches each node's mgmt directly via the
+# clabernetes Service "ci-<node>" (naming: prefixed) — no port-forward.
+testbed:
+  name: argo_clab_pr_lab
 
-    # csr1000v-1:
-    #     type: 'router'
-    #     os: 'iosxe'
-    #     platform: asr1k
-    #     alias: 'helper'
-    #     credentials:
-    #         default:
-    #             username: cisco
-    #             password: cisco
-    #     connections:
-    #         cli:
-    #             protocol: ssh
-    #             ip: "172.25.192.90"
+devices:
+  r1-clab1:
+    type: router
+    os: eos
+    credentials:
+      default:
+        username: admin
+        password: admin
+    connections:
+      cli:
+        protocol: ssh
+        ip: ci-r1-clab1
+        port: 22
+      eapi:
+        protocol: https
+        ip: ci-r1-clab1
+        port: 443
+  r2-clab1:
+    type: router
+    os: eos
+    credentials:
+      default:
+        username: admin
+        password: admin
+    connections:
+      cli:
+        protocol: ssh
+        ip: ci-r2-clab1
+        port: 22
+      eapi:
+        protocol: https
+        ip: ci-r2-clab1
+        port: 443
