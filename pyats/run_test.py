@@ -21,12 +21,14 @@ def _plain(value):
 def _connect(device):
     eapi = device.connections["eapi"]
     creds = device.credentials["default"]
+    # pyATS stores ip as an IPv4Address and password as a SecretString; pyeapi
+    # needs plain str/int or it throws "expected string or bytes-like object".
     return pyeapi.connect(
         transport="https",
-        host=eapi["ip"],
-        port=eapi.get("port", 443),
-        username=_plain(creds["username"]),
-        password=_plain(creds["password"]),
+        host=str(eapi["ip"]),
+        port=int(eapi.get("port", 443)),
+        username=str(_plain(creds["username"])),
+        password=str(_plain(creds["password"])),
     )
 
 
