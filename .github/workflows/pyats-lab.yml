@@ -26,16 +26,32 @@ jobs:
           echo "${{ secrets.KUBECONFIG_B64 }}" | base64 -d > "$KUBECONFIG"
           chmod 600 "$KUBECONFIG"
 
+      - name: Preflight - cluster reachable + app exists
+        run: |
+          echo "context: $(kubectl config current-context 2>&1)"
+          if ! kubectl -n argocd get applications 2>&1; then
+            echo "::error::kubectl cannot list ArgoCD applications - check KUBECONFIG_B64 / RBAC / reachability"
+            exit 1
+          fi
+          if ! kubectl -n argocd get application "$APP" >/dev/null 2>&1; then
+            echo "::error::ArgoCD app $APP not found - is the pr-labs ApplicationSet generating it?"
+            kubectl -n argocd get applicationset pr-labs -o yaml 2>&1 | tail -40
+            exit 1
+          fi
+
       - name: Wait for ArgoCD app to sync
         run: |
           for i in $(seq 1 60); do
             sync=$(kubectl -n argocd get application "$APP" \
               -o jsonpath='{.status.sync.status}' 2>/dev/null || true)
-            echo "[$i] $APP sync=${sync:-?}"
+            health=$(kubectl -n argocd get application "$APP" \
+              -o jsonpath='{.status.health.status}' 2>/dev/null || true)
+            echo "[$i] $APP sync=${sync:-?} health=${health:-?}"
             [ "$sync" = "Synced" ] && exit 0
             sleep 20
           done
-          echo "ArgoCD app $APP not Synced in time" >&2
+          echo "::error::ArgoCD app $APP not Synced in time"
+          kubectl -n argocd get application "$APP" -o yaml 2>&1 | tail -40
           exit 1
 
       - name: Wait for pyATS Job to finish

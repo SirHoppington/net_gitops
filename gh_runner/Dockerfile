@@ -9,7 +9,8 @@ FROM rancher/kubectl:v1.29.3 AS kubectl
 FROM ubuntu:22.04
 
 ARG RUNNER_VERSION="2.319.1"
-ARG TARGETARCH="x64"
+# TARGETARCH is auto-provided by buildkit (amd64 / arm64) -> build native for the host.
+ARG TARGETARCH
 
 RUN apt-get update -y \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -21,8 +22,14 @@ RUN apt-get update -y \
 COPY --from=kubectl /bin/kubectl /usr/local/bin/kubectl
 
 WORKDIR /home/runner
-RUN curl -fsSL -o runner.tar.gz \
-        "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-${TARGETARCH}-${RUNNER_VERSION}.tar.gz" \
+# Map docker arch -> GitHub runner arch naming (amd64->x64, arm64->arm64).
+RUN case "${TARGETARCH}" in \
+        amd64) RUNNER_ARCH=x64 ;; \
+        arm64) RUNNER_ARCH=arm64 ;; \
+        *) echo "unsupported TARGETARCH=${TARGETARCH}" && exit 1 ;; \
+    esac \
+    && curl -fsSL -o runner.tar.gz \
+        "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-${RUNNER_ARCH}-${RUNNER_VERSION}.tar.gz" \
     && tar xzf runner.tar.gz && rm runner.tar.gz \
     && ./bin/installdependencies.sh \
     && chown -R runner:runner /home/runner
