@@ -12,6 +12,13 @@ devices:
   r1-clab1:
     type: router
     os: eos
+    # Topology neighbours: local link interface + peer ip to ping across it.
+    # Must live under custom: pyATS rejects unknown top-level device keys.
+    custom:
+      neighbors:
+        r2-clab1:
+          interface: Ethernet1/1
+          ip: 10.1.1.2
     credentials:
       default:
         username: admin
@@ -28,6 +35,11 @@ devices:
   r2-clab1:
     type: router
     os: eos
+    custom:
+      neighbors:
+        r1-clab1:
+          interface: Ethernet1/1
+          ip: 10.1.1.1
     credentials:
       default:
         username: admin

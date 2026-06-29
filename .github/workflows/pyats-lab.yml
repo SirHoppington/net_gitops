@@ -19,9 +19,17 @@ jobs:
       NS: lab-pr-${{ github.event.pull_request.number }}
       APP: lab-pr-${{ github.event.pull_request.number }}
       KUBECONFIG: ${{ github.workspace }}/.kube/config
+      KIND_CLUSTER: c9s
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Build + load pyATS image into kind
+        run: |
+          # Rebuild from this PR's code and load into the cluster so the Job
+          # never runs a stale image. sudo: docker/kind use the host socket.
+          sudo docker build -f pyats/Dockerfile-pyats -t pyats-clab:latest .
+          sudo kind load docker-image pyats-clab:latest -n "$KIND_CLUSTER"
 
       - name: Configure kubeconfig
         run: |

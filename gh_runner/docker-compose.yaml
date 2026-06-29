@@ -12,4 +12,8 @@ services:
     env_file: .env
     # host networking so the runner reaches both GitHub and the private cluster.
     network_mode: host
+    # host docker socket: the build+load pre-step builds the pyATS image and
+    # `kind load`s it into the cluster nodes (run via sudo inside the runner).
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
