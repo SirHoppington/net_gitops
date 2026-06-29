@@ -1,0 +1,79 @@
+---
+name: pyats-lab
+
+# Surfaces the in-cluster pyATS result (ArgoCD PostSync hook Job "pyats-tests"
+# in namespace lab-pr-<PR>) into GitHub Actions: waits for the ArgoCD app to
+# sync, then tails the Job logs and mirrors its pass/fail as the check result.
+#
+# Runs on a SELF-HOSTED runner (GitHub-hosted runners cannot reach the private
+# lab cluster). Needs a base64 kubeconfig in secret KUBECONFIG_B64.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pyats:
+    runs-on: self-hosted
+    env:
+      NS: lab-pr-${{ github.event.pull_request.number }}
+      APP: lab-pr-${{ github.event.pull_request.number }}
+      KUBECONFIG: ${{ github.workspace }}/.kube/config
+    steps:
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p "$(dirname "$KUBECONFIG")"
+          echo "${{ secrets.KUBECONFIG_B64 }}" | base64 -d > "$KUBECONFIG"
+          chmod 600 "$KUBECONFIG"
+
+      - name: Wait for ArgoCD app to sync
+        run: |
+          for i in $(seq 1 60); do
+            sync=$(kubectl -n argocd get application "$APP" \
+              -o jsonpath='{.status.sync.status}' 2>/dev/null || true)
+            echo "[$i] $APP sync=${sync:-?}"
+            [ "$sync" = "Synced" ] && exit 0
+            sleep 20
+          done
+          echo "ArgoCD app $APP not Synced in time" >&2
+          exit 1
+
+      - name: Wait for pyATS Job to finish
+        id: job
+        run: |
+          # PostSync hook Job runs while cEOS boots; run_test polls eAPI ~10min.
+          for i in $(seq 1 90); do
+            if ! kubectl -n "$NS" get job pyats-tests >/dev/null 2>&1; then
+              echo "[$i] waiting for job pyats-tests to appear"
+              sleep 10
+              continue
+            fi
+            succeeded=$(kubectl -n "$NS" get job pyats-tests \
+              -o jsonpath='{.status.succeeded}' 2>/dev/null || true)
+            failed=$(kubectl -n "$NS" get job pyats-tests \
+              -o jsonpath='{.status.failed}' 2>/dev/null || true)
+            echo "[$i] pyats-tests succeeded=${succeeded:-0} failed=${failed:-0}"
+            if [ "${succeeded:-0}" = "1" ]; then
+              echo "result=pass" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if [ -n "$failed" ] && [ "$failed" != "0" ]; then
+              echo "result=fail" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "result=timeout" >> "$GITHUB_OUTPUT"
+
+      - name: Show pyATS logs
+        if: always()
+        run: kubectl -n "$NS" logs job/pyats-tests || true
+
+      - name: Reflect result
+        if: always()
+        run: |
+          case "${{ steps.job.outputs.result }}" in
+            pass) echo "pyATS passed"; exit 0 ;;
+            fail) echo "pyATS failed" >&2; exit 1 ;;
+            *)    echo "pyATS did not complete in time" >&2; exit 1 ;;
+          esac
