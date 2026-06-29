@@ -16,25 +16,3 @@ services:
       # Mount SSH config from host
       - /etc/ssh/ssh_config:/etc/ssh/ssh_config
     entrypoint: bash
-  # clab:
-  #   build:
-  #     dockerfile: clab/Dockerfile-clab
-  #   container_name: containerlab
-  #   env_file: .env
-  #   stdin_open: true
-  #   tty: true
-  #   privileged: true
-  #   network_mode: host
-  #   working_dir: "$PWD/clab"
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #     - /var/run/netns:/var/run/netns
-  #     - /etc/hosts:/etc/hosts
-  #     - /var/lib/docker/containers:/var/lib/docker/containers
-  #     - ${PWD}:$PWD:rw
-  #     # Mount SSH keys from host
-  #     - ~/.ssh:/tmp/.ssh:ro
-  #     # Mount SSH config from host
-  #     - /etc/ssh/ssh_config:/etc/ssh/ssh_config
-  #   pid: host
-  #   command: "containerlab deploy"

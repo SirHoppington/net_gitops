@@ -6,7 +6,6 @@ resources:
   - topology.yaml
   - interfaces.yaml
   - exec-map.yaml
-  - pyats-job.yaml
 
 # Build the startup-config ConfigMaps from plain .cfg files under configs/.
 # Key is startup-config.cfg (the path clabernetes mounts); add a router by
