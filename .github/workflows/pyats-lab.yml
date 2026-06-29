@@ -20,6 +20,9 @@ jobs:
       APP: lab-pr-${{ github.event.pull_request.number }}
       KUBECONFIG: ${{ github.workspace }}/.kube/config
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Configure kubeconfig
         run: |
           mkdir -p "$(dirname "$KUBECONFIG")"
@@ -54,16 +57,18 @@ jobs:
           kubectl -n argocd get application "$APP" -o yaml 2>&1 | tail -40
           exit 1
 
+      - name: Run pyATS Job in-cluster
+        run: |
+          # Run the test on demand (don't rely on the ArgoCD PostSync hook, which
+          # only fires during a sync). Fresh Job each run; reaches routers by svc DNS.
+          kubectl -n "$NS" delete job pyats-tests --ignore-not-found
+          kubectl -n "$NS" apply -f ci/pyats-job.yaml
+
       - name: Wait for pyATS Job to finish
         id: job
         run: |
-          # PostSync hook Job runs while cEOS boots; run_test polls eAPI ~10min.
+          # run_test polls eAPI while cEOS boots (~10min).
           for i in $(seq 1 90); do
-            if ! kubectl -n "$NS" get job pyats-tests >/dev/null 2>&1; then
-              echo "[$i] waiting for job pyats-tests to appear"
-              sleep 10
-              continue
-            fi
             succeeded=$(kubectl -n "$NS" get job pyats-tests \
               -o jsonpath='{.status.succeeded}' 2>/dev/null || true)
             failed=$(kubectl -n "$NS" get job pyats-tests \
