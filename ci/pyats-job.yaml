@@ -12,8 +12,10 @@ spec:
       restartPolicy: Never
       containers:
         - name: pyats
-          image: 192.168.155.250:5000/pyats-clab:latest
-          imagePullPolicy: Always
+          # kind-loaded local image (kind load docker-image pyats-clab:latest).
+          # IfNotPresent so it uses the loaded image instead of pulling a registry.
+          image: pyats-clab:latest
+          imagePullPolicy: IfNotPresent
           env:
             - name: PYATS_BOOT_TIMEOUT
               value: "600"

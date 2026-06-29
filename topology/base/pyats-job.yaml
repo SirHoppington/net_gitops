@@ -18,8 +18,9 @@ spec:
       restartPolicy: Never
       containers:
         - name: pyats
-          image: 192.168.155.250:5000/pyats-clab:latest
-          imagePullPolicy: Always
+          # kind-loaded local image (kind load docker-image pyats-clab:latest).
+          image: pyats-clab:latest
+          imagePullPolicy: IfNotPresent
           env:
             # cEOS needs a few minutes to boot; poll eAPI until it answers.
             - name: PYATS_BOOT_TIMEOUT

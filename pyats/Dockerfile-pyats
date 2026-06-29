@@ -1,7 +1,9 @@
-# pyATS test-runner image for the in-cluster ArgoCD PostSync hook.
-# Build + push to the lab registry so the lab cluster can pull it:
-#   docker build -f pyats/Dockerfile-pyats -t 192.168.155.250:5000/pyats-clab:latest .
-#   docker push 192.168.155.250:5000/pyats-clab:latest
+# pyATS test-runner image for the in-cluster Job.
+# Build + load into the kind cluster (the Job uses image pyats-clab:latest,
+# imagePullPolicy IfNotPresent):
+#   docker build -f pyats/Dockerfile-pyats -t pyats-clab:latest .
+#   kind load docker-image pyats-clab:latest -n c9s
+# Rebuild + reload after changing run_test.py / testbed.yaml.
 #
 # The pyATS base image is amd64-only; pin the platform so it builds the same way
 # on Apple Silicon (emulated) and matches an amd64 lab cluster.
