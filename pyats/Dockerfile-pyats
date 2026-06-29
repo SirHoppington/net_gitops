@@ -11,12 +11,14 @@ FROM --platform=linux/amd64 ciscotestautomation/pyats:latest
 
 WORKDIR /pyats
 
-# pyATS is already in the base image - only pyeapi is missing.
-RUN pip3 install --no-cache-dir pyeapi==1.0.4
+# pyATS lives in the image's venv at /pyats; install pyeapi into the SAME venv
+# (system pip would put it where pyats can't see it).
+RUN /pyats/bin/pip install --no-cache-dir pyeapi==1.0.4
 
 # Bake the test harness in; the router config under test is per-PR (mounted by
 # clabernetes from this repo's topology/base), the harness itself is stable.
 COPY pyats/run_test.py ./run_test.py
 COPY pyats/inventory/testbed.yaml ./inventory/testbed.yaml
 
-ENTRYPOINT ["python3", "/pyats/run_test.py"]
+# Use the venv interpreter (system python3 has neither pyats nor pyeapi).
+ENTRYPOINT ["/pyats/bin/python", "/pyats/run_test.py"]
