@@ -25,19 +25,18 @@ spec:
                   - r2-clab1:eth1
             nodes:
               r1-clab1:
-                image: localhost:5000/ceos:latest
+                image: registry.registry.svc.cluster.local:5000/ceos:latest
                 kind: arista_ceos
                 labels:
                   type: lab
               r2-clab1:
-                image: localhost:5000/ceos:latest
+                image: registry.registry.svc.cluster.local:5000/ceos:latest
                 kind: arista_ceos
                 labels:
                   type: lab
   imagePull:
+    insecureRegistries: ["registry.registry.svc.cluster.local:5000"]
     pullThroughOverride: never
-    insecureRegistries:
-       - localhost:5000
     
   deployment:
     launcherImage: ghcr.io/srl-labs/clabernetes/clabernetes-launcher:latest
