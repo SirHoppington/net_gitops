@@ -26,18 +26,19 @@ spec:
             nodes:
               r1-clab1:
                 image: 192.168.155.250:5000/ceos:latest
+                image: ceos:latest
                 kind: arista_ceos
                 labels:
                   type: lab
               r2-clab1:
-                image: 192.168.155.250:5000/ceos:latest
+                image: ceos:latest
                 kind: arista_ceos
                 labels:
                   type: lab
   imagePull:
     pullThroughOverride: never
-    insecureRegistries:
-      - 192.168.155.250:5000
+    # insecureRegistries:
+    #   - 192.168.155.250:5000
   deployment:
     launcherImage: ghcr.io/srl-labs/clabernetes/clabernetes-launcher:latest
     filesFromConfigMap:
