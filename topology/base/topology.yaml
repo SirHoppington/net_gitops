@@ -36,6 +36,9 @@ spec:
                   type: lab
   imagePull:
     pullThroughOverride: auto
+    insecureRegistries:
+       - localhost
+    
   deployment:
     launcherImage: ghcr.io/srl-labs/clabernetes/clabernetes-launcher:latest
     filesFromConfigMap:
