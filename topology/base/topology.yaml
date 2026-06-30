@@ -35,7 +35,7 @@ spec:
                 labels:
                   type: lab
   imagePull:
-    pullThroughOverride: auto
+    pullThroughOverride: never
     insecureRegistries:
        - localhost
     
