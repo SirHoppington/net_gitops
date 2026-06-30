@@ -37,7 +37,7 @@ spec:
                   type: lab
   imagePull:
     pullThroughOverride: never
-    # insecureRegistries:
+    ## insecureRegistries:
     #   - 192.168.155.250:5000
   deployment:
     launcherImage: ghcr.io/srl-labs/clabernetes/clabernetes-launcher:latest
