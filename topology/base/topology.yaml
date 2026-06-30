@@ -25,7 +25,6 @@ spec:
                   - r2-clab1:eth1
             nodes:
               r1-clab1:
-                #image: 192.168.155.250:5000/ceos:latest
                 image: localhost/ceos:latest
                 kind: arista_ceos
                 labels:
@@ -36,9 +35,7 @@ spec:
                 labels:
                   type: lab
   imagePull:
-    pullThroughOverride: never
-    # insecureRegistries:
-    #   - localhost
+    pullThroughOverride: auto
   deployment:
     launcherImage: ghcr.io/srl-labs/clabernetes/clabernetes-launcher:latest
     filesFromConfigMap:
