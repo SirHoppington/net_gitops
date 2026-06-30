@@ -25,7 +25,7 @@ spec:
                   - r2-clab1:eth1
             nodes:
               r1-clab1:
-                image: 192.168.155.250:5000/ceos:latest
+                #image: 192.168.155.250:5000/ceos:latest
                 image: ceos:latest
                 kind: arista_ceos
                 labels:
