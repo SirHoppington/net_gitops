@@ -19,20 +19,21 @@ topology:
       image: ceos:latest
   links:
     - endpoints:
-        - r1-lab:eth1
-        - r2-lab:eth1
+        - router-1:eth1
+        - router-2:e1-1
   nodes:
-    r1-lab:
-      image: ceos:4.31.2F
+    router-1:
+      image: ceos:4.36.1F
       kind: arista_ceos
       labels:
         ansible-group: role_pe_router
         type: lab
       mgmt-ipv4: 10.0.0.100
       # startup-config: startup-configs/r1-lab.cfg
-    r2-lab:
-      image: ceos:4.31.2F
-      kind: arista_ceos
+    router-2:
+      kind: nokia_srlinux
+      type: ixr-d3
+      image: ghcr.io/nokia/srlinux
       labels:
         ansible-group: role_pe_router
         type: lab
